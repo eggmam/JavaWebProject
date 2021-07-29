@@ -2,8 +2,11 @@ server:
   port: 8080
 
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
   datasource:
-    url: jdbc:mysql://localhost:3306/easy?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
+    url: jdbc:mysql://localhost:3306/db_example?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: springuser
+    password: ThePassword
     driver-class-name: com.mysql.cj.jdbc.Driver

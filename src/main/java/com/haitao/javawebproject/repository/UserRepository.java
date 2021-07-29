@@ -1,4 +1,4 @@
-package com.haitao.javawebproject;
+package com.haitao.javawebproject.repository;
 
 
 import com.haitao.javawebproject.pojo.User;

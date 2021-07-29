@@ -1,6 +1,7 @@
-package controller;
+package com.haitao.javawebproject.controller;
 
 import com.haitao.javawebproject.pojo.Greeting;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
