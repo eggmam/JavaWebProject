@@ -1,5 +1,7 @@
 package com.haitao.javawebproject.pojo;
 
+import org.springframework.boot.CommandLineRunner;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

@@ -3,7 +3,10 @@ package com.haitao.javawebproject.repository;
 import com.haitao.javawebproject.pojo.Customer;
 import org.springframework.data.repository.CrudRepository;
 
-public interface CurdRepository extends CrudRepository<Customer,Long> {
-    List<Customer> findByLa
+import java.util.List;
+
+public interface CustomerRepository extends CrudRepository<Customer,Long> {
+    List<Customer> findByLastName(String lastName);
+    Customer findById(long id);
 
 }
