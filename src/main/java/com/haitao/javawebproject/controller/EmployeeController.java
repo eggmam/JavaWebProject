@@ -8,9 +8,14 @@ import com.haitao.javawebproject.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.ws.Response;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -20,7 +25,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class EmployeeController {
 
     private final EmployeeRepository repository;
-    @Autowired
+
     private final EmployeeModelAssembler assembler;
 
     EmployeeController(EmployeeRepository repository, EmployeeModelAssembler assembler){
@@ -28,7 +33,10 @@ public class EmployeeController {
         this.assembler = assembler;
     }
 
-
+    /**
+     * all employees
+     * @return
+     */
     @GetMapping("/employees")
     public CollectionModel<EntityModel<Employee>> all(){
         List<EntityModel<Employee>> employees = repository.findAll().stream().
@@ -37,10 +45,6 @@ public class EmployeeController {
         return CollectionModel.of(employees,linkTo(methodOn(EmployeeController.class).all()).withSelfRel());
     }
 
-    @PostMapping("/employees")
-    Employee newEmployee(@RequestBody Employee newEmployee){
-        return repository.save(newEmployee);
-    }
 
     /**
      * single item
@@ -53,10 +57,15 @@ public class EmployeeController {
         return assembler.toModel(employee);
     }
 
-    /**
-     * 修改指定id的employees的属性
-     * @return
-     */
+    @PostMapping("/employees")
+    ResponseEntity<?> newEmployee(@RequestBody Employee newEmployee){
+        EntityModel<Employee> entityModel = assembler.toModel(repository.save(newEmployee));
+
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
+    }
+
+
+
 //    @PutMapping("/employees/{id}")
 //    Employee replaceEmployee(@PathVariable Long id,@RequestBody Employee employee){
 //        employee.setId(id);
@@ -64,9 +73,9 @@ public class EmployeeController {
 //    }
 
     @PutMapping("/employees/{id}")
-    Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
+    ResponseEntity replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
 
-        return repository.findById(id)
+        Employee updateEmployee =  repository.findById(id)
                 .map(employee -> {
                     employee.setName(newEmployee.getName());
                     employee.setRole(newEmployee.getRole());
@@ -76,11 +85,14 @@ public class EmployeeController {
                     newEmployee.setId(id);
                     return repository.save(newEmployee);
                 });
+        EntityModel entityModel = assembler.toModel(updateEmployee);
+        return  ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 
     @DeleteMapping("/employees/{id}")
-    void deleteEmployee(@PathVariable Long id){
+    ResponseEntity deleteEmployee(@PathVariable Long id){
         repository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
 
