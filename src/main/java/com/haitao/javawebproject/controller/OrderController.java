@@ -6,10 +6,12 @@ import com.haitao.javawebproject.exception.OrderNotFoundException;
 import com.haitao.javawebproject.pojo.Order;
 import com.haitao.javawebproject.pojo.Status;
 import com.haitao.javawebproject.repository.OrderRepository;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.IanaLinkRelations;
-import org.springframework.hateoas.RepresentationModel;
+import org.aspectj.weaver.ast.Or;
+import org.springframework.hateoas.*;
+import org.springframework.hateoas.mediatype.problem.Problem;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,12 +46,42 @@ public class OrderController {
 
 
     @PostMapping("/orders")
-    ResponseEntity newOrder(@RequestBody Order order){
+    public ResponseEntity newOrder(@RequestBody Order order){
         order.setStatus(Status.IN_PROGRESS);
         Order save = orderRepository.save(order);
         EntityModel<Order> orderEntityModel = assembler.toModel(save);
        return  ResponseEntity.created(orderEntityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(orderEntityModel);
 
+    }
+
+    @DeleteMapping("/orders/{id}/cancel")
+    public ResponseEntity cancel(@PathVariable Long id){
+        Order order = orderRepository.findById(id).orElseThrow(()->new OrderNotFoundException(id));
+        if (order.getStatus()==Status.IN_PROGRESS){
+            order.setStatus(Status.CANCELED);
+            return ResponseEntity.ok(assembler.toModel(orderRepository.save(order)));
+        }
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .header(HttpHeaders.CONTENT_TYPE, MediaTypes.HTTP_PROBLEM_DETAILS_JSON_VALUE)
+                .body(Problem.create().withTitle("Method not allowed").
+                        withDetail("you can't cancel an order that is in the"+order.getStatus()+" status"));
+    }
+
+    @PutMapping("/orders/{id}/complete")
+    public ResponseEntity complete(@PathVariable Long id){
+        Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+
+       if (order.getStatus()==Status.IN_PROGRESS){
+           order.setStatus(Status.COMPLETED);
+           return ResponseEntity.ok(assembler.toModel(orderRepository.save(order)));
+       }
+
+       return ResponseEntity
+               .status(HttpStatus.METHOD_NOT_ALLOWED)
+               .header(HttpHeaders.CONTENT_TYPE,MediaTypes.HTTP_PROBLEM_DETAILS_JSON_VALUE)
+               .body(Problem.create()
+                       .withTitle("Method not allowed")
+                       .withDetail("You can't complete an order that is in the "+order.getStatus()+"status"));
     }
 
 
